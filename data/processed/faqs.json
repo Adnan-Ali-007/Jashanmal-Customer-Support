@@ -1,0 +1,163 @@
+[
+  {
+    "category": "orders",
+    "question": "Placing an order",
+    "answer": "Placing an order is simple and secure. Once your purchase is complete, you’ll receive an order confirmation by email within moments.",
+    "source": "https://www.jashanmal.com/pages/orders"
+  },
+  {
+    "category": "orders",
+    "question": "Order confirmation",
+    "answer": "Your confirmation email includes your order number and details. If you don’t see it, please check your spam or junk folder.",
+    "source": "https://www.jashanmal.com/pages/orders"
+  },
+  {
+    "category": "orders",
+    "question": "Changing or cancelling an order",
+    "answer": "We start processing orders quickly. While we’ll do our best to help with changes or cancellations, this may not be possible once your order has been confirmed or shipped.",
+    "source": "https://www.jashanmal.com/pages/orders"
+  },
+  {
+    "category": "orders",
+    "question": "Order delays",
+    "answer": "If your order is taking longer than expected, please get in touch with us. We’ll check in with our delivery partners and update you promptly.",
+    "source": "https://www.jashanmal.com/pages/orders"
+  },
+  {
+    "category": "orders",
+    "question": "Guest orders",
+    "answer": "Orders placed as a guest won’t appear in your account. Please keep your confirmation email for tracking and support.",
+    "source": "https://www.jashanmal.com/pages/orders"
+  },
+  {
+    "category": "orders",
+    "question": "Cash on Delivery verification",
+    "answer": "Some Cash on Delivery orders may require a brief verification before delivery. If verification isn’t completed, the order may be automatically cancelled.",
+    "source": "https://www.jashanmal.com/pages/orders"
+  },
+
+  {
+    "category": "gift_card",
+    "question": "Gift cards",
+    "answer": "Our Gift cards let your recipient choose exactly what they love.",
+    "source": "https://www.jashanmal.com/pages/gift-card-wallet"
+  },
+  {
+    "category": "gift_card",
+    "question": "How are gift cards delivered?",
+    "answer": "Gift cards are available in selected denominations and are delivered digitally to the email address of your choosing. Gift cards are redeemable online only.",
+    "source": "https://www.jashanmal.com/pages/gift-card-wallet"
+  },
+  {
+    "category": "gift_card",
+    "question": "How do I use a gift card?",
+    "answer": "Enter the Gift card code at checkout in the “Discount code or gift card” field. You can pay any remaining balance with another payment method. Any unused balance can be applied to a future purchase.",
+    "source": "https://www.jashanmal.com/pages/gift-card-wallet"
+  },
+  {
+    "category": "gift_card",
+    "question": "Gift card terms",
+    "answer": "Gift cards are valid at any time. They are non-refundable and not redeemable for cash.",
+    "source": "https://www.jashanmal.com/pages/gift-card-wallet"
+  },
+
+  {
+    "category": "payment",
+    "question": "Accepted payment methods",
+    "answer": "We offer flexible and secure payment options. Accepted payment methods include Mastercard credit or debit cards. Payments must be made in the currency shown on your order.",
+    "source": "https://www.jashanmal.com/pages/payment"
+  },
+  {
+    "category": "payment",
+    "question": "Paying by credit or debit card",
+    "answer": "Enter your card details at checkout to complete your purchase. Your card is charged once the order is placed and approved by your bank. Additional verification may be required for security purposes.",
+    "source": "https://www.jashanmal.com/pages/payment"
+  },
+  {
+    "category": "payment",
+    "question": "Using multiple payment methods",
+    "answer": "You can combine a Gift Card with another payment method at checkout.",
+    "source": "https://www.jashanmal.com/pages/payment"
+  },
+  {
+    "category": "payment",
+    "question": "Payment issues",
+    "answer": "If a payment is declined or does not go through, please check with your bank or try another payment method.",
+    "source": "https://www.jashanmal.com/pages/payment"
+  },
+  {
+    "category": "payment",
+    "question": "Charges and verification",
+    "answer": "Some payments may require additional verification. Any temporary charges placed by your bank will be released automatically.",
+    "source": "https://www.jashanmal.com/pages/payment"
+  },
+
+  {
+    "category": "shipping",
+    "question": "Delivery locations",
+    "answer": "We deliver across the UAE.",
+    "source": "https://www.jashanmal.com/pages/shipping-delivery"
+  },
+  {
+    "category": "shipping",
+    "question": "Delivery timelines",
+    "answer": "Dubai and Abu Dhabi deliveries are completed within 2 working days within city limits. Other Emirates are delivered within 3 working days. Deliveries operate Monday to Saturday. Public holidays may cause delays.",
+    "source": "https://www.jashanmal.com/pages/shipping-delivery"
+  },
+  {
+    "category": "shipping",
+    "question": "Delivery partner",
+    "answer": "Orders are delivered by trusted courier partners. Tracking details are provided once your order ships.",
+    "source": "https://www.jashanmal.com/pages/shipping-delivery"
+  },
+  {
+    "category": "shipping",
+    "question": "Missed delivery attempts",
+    "answer": "If you are unavailable at delivery, the shipment is returned to the nearest facility and a delivery call is made the next working day.",
+    "source": "https://www.jashanmal.com/pages/shipping-delivery"
+  },
+  {
+    "category": "shipping",
+    "question": "Shipping updates",
+    "answer": "You will receive order and shipping updates by email throughout the delivery process.",
+    "source": "https://www.jashanmal.com/pages/shipping-delivery"
+  },
+
+  {
+    "category": "returns",
+    "question": "Return conditions",
+    "answer": "Items must be unused, in original condition, with packaging and receipt. Returns are not accepted for books, perfumes, cosmetics, select personal care items, or used products.",
+    "source": "https://www.jashanmal.com/pages/returns-exchanges"
+  },
+  {
+    "category": "returns",
+    "question": "Damaged or incorrect items",
+    "answer": "Damaged, defective, or incorrect items can be returned within 14 days. Items that fail quality checks after use will be sent back to the customer.",
+    "source": "https://www.jashanmal.com/pages/returns-exchanges"
+  },
+  {
+    "category": "returns",
+    "question": "Return processing time",
+    "answer": "Once your return reaches us, inspection and processing typically take 2–5 working days.",
+    "source": "https://www.jashanmal.com/pages/returns-exchanges"
+  },
+  {
+    "category": "returns",
+    "question": "Refunds",
+    "answer": "Refunds are issued as gift vouchers after inspection. Credit card refunds apply only if the item is out of stock, damaged, defective, or does not match the description. Credit card refunds take 3–10 working days, with banks taking up to 14 days. Cash on Delivery and cancelled orders are refunded as gift vouchers.",
+    "source": "https://www.jashanmal.com/pages/returns-exchanges"
+  },
+  {
+    "category": "returns",
+    "question": "Exchanges",
+    "answer": "We currently do not offer exchanges. Please follow the return process instead.",
+    "source": "https://www.jashanmal.com/pages/returns-exchanges"
+  },
+
+  {
+    "category": "about",
+    "question": "About Jashanmal",
+    "answer": "Founded in 1919, the Jashanmal Group is a leading retail and distribution company headquartered in Dubai, operating across the UAE, Kuwait, Bahrain, Oman, and India. The Group represents over 100 international brands and exclusive labels and has been shaped by a culture of trust, quality, and continuous growth for over a century.",
+    "source": "https://www.jashanmal.com/pages/about"
+  }
+]
