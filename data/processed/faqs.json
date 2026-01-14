@@ -64,7 +64,7 @@
   {
     "category": "payment",
     "question": "Accepted payment methods",
-    "answer": "We offer flexible and secure payment options. Accepted payment methods include Mastercard credit or debit cards. Payments must be made in the currency shown on your order.",
+    "answer": "We offer flexible and secure payment options for a smooth checkout experience.\n\nAccepted payment methods:\n• VISA credit/debit\n• MASTERCARD credit/debit\n• Apple Pay\n• Tabby\n• Tamara\n• Cash on Delivery\n\nPayment must be made in the currency as indicated on your order before you submit it. Your products will be supplied after your payment is cleared.",
     "source": "https://www.jashanmal.com/pages/payment"
   },
   {
