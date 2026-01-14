@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
@@ -22,6 +23,23 @@ CREDENTIALS_PATH = Path("booking/credentials.json")
 LOCAL_TIMEZONE = 'Asia/Dubai'  # Change this to your timezone
 
 
+def get_credentials_from_streamlit_secrets():
+    """Get service account credentials from Streamlit secrets (for cloud deployment)"""
+    try:
+        import streamlit as st
+        if hasattr(st, 'secrets') and 'gcp_service_account' in st.secrets:
+            # Convert Streamlit secrets to dict
+            service_account_info = dict(st.secrets['gcp_service_account'])
+            credentials = service_account.Credentials.from_service_account_info(
+                service_account_info,
+                scopes=SCOPES
+            )
+            return credentials
+    except Exception as e:
+        print(f"Could not load service account from Streamlit secrets: {e}")
+    return None
+
+
 class CalendarService:
     """Google Calendar service for booking meetings"""
     
@@ -30,9 +48,17 @@ class CalendarService:
         self.authenticate()
     
     def authenticate(self):
-        """Authenticate with Google Calendar API"""
+        """Authenticate with Google Calendar API (supports both OAuth and Service Account)"""
         creds = None
         
+        # Try Service Account first (for Streamlit Cloud)
+        creds = get_credentials_from_streamlit_secrets()
+        if creds:
+            print("✓ Using Service Account authentication (Streamlit Cloud)")
+            self.service = build('calendar', 'v3', credentials=creds)
+            return
+        
+        # Fall back to OAuth (for local development)
         # Load existing token
         if TOKEN_PATH.exists():
             with open(TOKEN_PATH, 'rb') as token:
@@ -46,7 +72,8 @@ class CalendarService:
                 if not CREDENTIALS_PATH.exists():
                     raise FileNotFoundError(
                         f"Please download OAuth credentials to {CREDENTIALS_PATH}\n"
-                        "Get them from: https://console.cloud.google.com/apis/credentials"
+                        "Get them from: https://console.cloud.google.com/apis/credentials\n"
+                        "Or set up Service Account for cloud deployment (see CALENDAR_CLOUD_SETUP.md)"
                     )
                 
                 flow = InstalledAppFlow.from_client_secrets_file(
@@ -59,6 +86,7 @@ class CalendarService:
             with open(TOKEN_PATH, 'wb') as token:
                 pickle.dump(creds, token)
         
+        print("✓ Using OAuth authentication (local)")
         self.service = build('calendar', 'v3', credentials=creds)
     
     def get_available_slots(

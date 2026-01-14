@@ -3,6 +3,7 @@ streamlit>=1.32.0
 
 # LLM + Agent framework
 langchain>=0.1.20
+langchain-community>=0.0.38
 langgraph>=0.0.40
 langchain-openai>=0.1.6
 
