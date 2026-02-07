@@ -75,11 +75,13 @@ Classify the query into ONE word only:
 - rag : orders, payments, shipping, returns, gift cards, company info, product questions
 - contact : contact us, customer support, help, phone number, email, whatsapp, reach out, get in touch
 - booking : booking calls or meetings, schedule appointment
-- order_tracking : track order, where is my order, order status, delivery status, tracking number
+- order_tracking : track order, where is my order, order status, delivery status, tracking number, check status, status of order
 - return_request : return item, return order, want to return, initiate return
 - refund_status : refund status, where is my refund, refund processing
 - greeting : hi, hello, hey, thanks, thank you, goodbye, bye, ok, okay, yes, no (simple greetings/acknowledgments)
 - fallback : anything else not related to customer support
+
+IMPORTANT: If query mentions "status" with an order number (like "status ORD-12345"), classify as order_tracking.
 
 Return ONLY one word.
 """
@@ -368,20 +370,27 @@ def order_tracking_node(state: AgentState) -> AgentState:
         # Get customer number from env
         customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
         
+        print(f"[DEBUG] Attempting WhatsApp notification to: {customer_number}")
+        print(f"[DEBUG] Order status: {status}")
+        
         if status == "shipped":
-            whatsapp.send_shipping_update(
+            success = whatsapp.send_shipping_update(
                 customer_number,
                 order_id,
                 tracking_info['tracking_number'],
                 tracking_info['carrier']
             )
+            print(f"[DEBUG] WhatsApp shipped notification: {'✓ Sent' if success else '✗ Failed'}")
         elif status == "delivered":
-            whatsapp.send_delivered_notification(
+            success = whatsapp.send_delivered_notification(
                 customer_number,
                 order_id
             )
+            print(f"[DEBUG] WhatsApp delivered notification: {'✓ Sent' if success else '✗ Failed'}")
     except Exception as e:
-        print(f"WhatsApp notification failed: {e}")
+        print(f"[ERROR] WhatsApp notification failed: {e}")
+        import traceback
+        traceback.print_exc()
     
     return {**state, "answer": answer}
 
@@ -446,14 +455,18 @@ def return_request_node(state: AgentState) -> AgentState:
             whatsapp = get_whatsapp_service()
             customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
             
-            whatsapp.send_return_approved(
+            print(f"[DEBUG] Sending return approval WhatsApp to: {customer_number}")
+            success = whatsapp.send_return_approved(
                 customer_number,
                 return_result['return_id'],
                 order_id,
                 return_result['refund_amount']
             )
+            print(f"[DEBUG] WhatsApp return approval: {'✓ Sent' if success else '✗ Failed'}")
         except Exception as e:
-            print(f"WhatsApp notification failed: {e}")
+            print(f"[ERROR] WhatsApp notification failed: {e}")
+            import traceback
+            traceback.print_exc()
     else:
         answer = (
             f"There was an issue processing your return:\n\n"
@@ -523,13 +536,17 @@ def refund_status_node(state: AgentState) -> AgentState:
             whatsapp = get_whatsapp_service()
             customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
             
-            whatsapp.send_refund_completed(
+            print(f"[DEBUG] Sending refund completed WhatsApp to: {customer_number}")
+            success = whatsapp.send_refund_completed(
                 customer_number,
                 refund_info['amount'],
                 order_id
             )
+            print(f"[DEBUG] WhatsApp refund completed: {'✓ Sent' if success else '✗ Failed'}")
         except Exception as e:
-            print(f"WhatsApp notification failed: {e}")
+            print(f"[ERROR] WhatsApp notification failed: {e}")
+            import traceback
+            traceback.print_exc()
             
     elif status == "processing":
         answer = (
@@ -547,15 +564,19 @@ def refund_status_node(state: AgentState) -> AgentState:
             whatsapp = get_whatsapp_service()
             customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
             
+            print(f"[DEBUG] Sending refund processing WhatsApp to: {customer_number}")
             # Get return ID from refund info
             return_id = refund_info.get('return_id', 'RET-00001')
-            whatsapp.send_refund_processing(
+            success = whatsapp.send_refund_processing(
                 customer_number,
                 return_id,
                 refund_info['amount']
             )
+            print(f"[DEBUG] WhatsApp refund processing: {'✓ Sent' if success else '✗ Failed'}")
         except Exception as e:
-            print(f"WhatsApp notification failed: {e}")
+            print(f"[ERROR] WhatsApp notification failed: {e}")
+            import traceback
+            traceback.print_exc()
     else:
         answer = (
             f"Your refund status: **{status}**\n\n"
