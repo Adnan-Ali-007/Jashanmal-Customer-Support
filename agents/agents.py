@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import sys
 from pathlib import Path
+import re
 
 # Add ingestion folder to path for imports
 sys.path.append(str(Path(__file__).parent.parent / "ingestion"))
@@ -14,6 +15,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
 from gemini_embeddings import GeminiEmbeddings
+
+# Import mock e-commerce backend
+from demo.mock_ecommerce import get_mock_backend
 
 # --------------------------------------------------
 # ENV
@@ -65,6 +69,9 @@ Classify the query into ONE word only:
 - rag : orders, payments, shipping, returns, gift cards, company info, product questions
 - contact : contact us, customer support, help, phone number, email, whatsapp, reach out, get in touch
 - booking : booking calls or meetings, schedule appointment
+- order_tracking : track order, where is my order, order status, delivery status, tracking number
+- return_request : return item, return order, want to return, initiate return
+- refund_status : refund status, where is my refund, refund processing
 - greeting : hi, hello, hey, thanks, thank you, goodbye, bye, ok, okay, yes, no (simple greetings/acknowledgments)
 - fallback : anything else not related to customer support
 
@@ -77,7 +84,7 @@ def router_node(state: AgentState) -> AgentState:
     )
 
     route = res.content.strip().lower()
-    if route not in {"rag", "contact", "booking", "greeting", "fallback"}:
+    if route not in {"rag", "contact", "booking", "order_tracking", "return_request", "refund_status", "greeting", "fallback"}:
         route = "fallback"
 
     return {**state, "route": route}
@@ -266,6 +273,291 @@ User: "What's the weather?" → "I'm focused on helping with Jashanmal customer 
     }
 
 # --------------------------------------------------
+# ORDER TRACKING NODE (DEMO)
+# --------------------------------------------------
+def extract_order_id(query: str) -> str:
+    """Extract order ID from query"""
+    # Look for patterns like ORD-12345, #12345, order 12345
+    patterns = [
+        r'ORD-\d+',
+        r'#\s*(\d+)',
+        r'order\s+(\d+)',
+        r'\b\d{5}\b'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, query, re.IGNORECASE)
+        if match:
+            if 'ORD-' in match.group():
+                return match.group()
+            else:
+                # Extract just the number and format it
+                number = re.search(r'\d+', match.group()).group()
+                return f"ORD-{number}"
+    
+    return None
+
+def order_tracking_node(state: AgentState) -> AgentState:
+    """Handle order tracking requests using mock backend"""
+    
+    backend = get_mock_backend()
+    order_id = extract_order_id(state['query'])
+    
+    if not order_id:
+        return {
+            **state,
+            "answer": (
+                "I can help you track your order! 📦\n\n"
+                "Please provide your order number (e.g., ORD-12345 or #12345) "
+                "so I can look up the tracking information for you."
+            )
+        }
+    
+    tracking_info = backend.track_order(order_id)
+    
+    if not tracking_info:
+        return {
+            **state,
+            "answer": (
+                f"I couldn't find order {order_id} in our system. 🔍\n\n"
+                "Please double-check your order number or contact us at:\n\n"
+                "📧 Email: support@jashanmal.com\n"
+                "📞 Call: 800 562 63"
+            )
+        }
+    
+    # Build response based on status
+    status = tracking_info['status']
+    
+    if status == "delivered":
+        answer = (
+            f"✅ Great news! Your order {order_id} has been **delivered**!\n\n"
+            f"📅 Delivered on: {tracking_info['delivery_date']}\n"
+            f"📦 Tracking: {tracking_info['tracking_number']}\n"
+            f"🚚 Carrier: {tracking_info['carrier']}\n\n"
+            "If you have any issues with your order, I can help you initiate a return!"
+        )
+    elif status == "shipped":
+        answer = (
+            f"📦 Your order {order_id} is **on its way**!\n\n"
+            f"🚚 Carrier: {tracking_info['carrier']}\n"
+            f"📦 Tracking: {tracking_info['tracking_number']}\n"
+            f"📅 Estimated delivery: {tracking_info['estimated_delivery']}\n\n"
+            f"Track your package: https://track.example.com/{tracking_info['tracking_number']}"
+        )
+    else:  # processing
+        answer = (
+            f"⏳ Your order {order_id} is being **processed**.\n\n"
+            f"📅 Estimated delivery: {tracking_info['estimated_delivery']}\n\n"
+            "We'll send you tracking information once it ships!"
+        )
+    
+    # Send WhatsApp notification
+    try:
+        from notifications.whatsapp_service import get_whatsapp_service
+        import os
+        
+        whatsapp = get_whatsapp_service()
+        customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
+        
+        if status == "shipped":
+            whatsapp.send_shipping_update(
+                customer_number,
+                order_id,
+                tracking_info['tracking_number'],
+                tracking_info['carrier']
+            )
+        elif status == "delivered":
+            whatsapp.send_delivered_notification(
+                customer_number,
+                order_id
+            )
+    except Exception as e:
+        print(f"WhatsApp notification failed: {e}")
+    
+    return {**state, "answer": answer}
+
+# --------------------------------------------------
+# RETURN REQUEST NODE (DEMO)
+# --------------------------------------------------
+def return_request_node(state: AgentState) -> AgentState:
+    """Handle return requests using mock backend"""
+    
+    backend = get_mock_backend()
+    order_id = extract_order_id(state['query'])
+    
+    if not order_id:
+        return {
+            **state,
+            "answer": (
+                "I can help you with returns! 🔄\n\n"
+                "Please provide your order number (e.g., ORD-12345) "
+                "so I can check if it's eligible for return."
+            )
+        }
+    
+    # Check eligibility
+    eligibility = backend.check_return_eligibility(order_id)
+    
+    if not eligibility['eligible']:
+        return {
+            **state,
+            "answer": (
+                f"I'm sorry, order {order_id} is not eligible for return.\n\n"
+                f"**Reason:** {eligibility['reason']}\n\n"
+                "If you have questions, please contact us at:\n"
+                "📧 Email: support@jashanmal.com\n"
+                "📞 Call: 800 562 63"
+            )
+        }
+    
+    # Create return
+    return_result = backend.create_return(
+        order_id,
+        items=["all"],
+        reason="Customer request"
+    )
+    
+    if return_result['success']:
+        answer = (
+            f"✅ Return approved for order {order_id}!\n\n"
+            f"**Return ID:** {return_result['return_id']}\n"
+            f"**Refund Amount:** ${return_result['refund_amount']:.2f}\n\n"
+            f"📦 **Return Label:** [Download Label]({return_result['return_label']})\n"
+            f"📍 **Tracking:** {return_result['tracking_number']}\n\n"
+            f"**Instructions:**\n"
+            f"{return_result['instructions']}\n\n"
+            "Your refund will be processed within 3-5 business days after we receive the item."
+        )
+        
+        # Send WhatsApp notification for return approval
+        try:
+            from notifications.whatsapp_service import get_whatsapp_service
+            import os
+            
+            whatsapp = get_whatsapp_service()
+            customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
+            
+            whatsapp.send_return_approved(
+                customer_number,
+                return_result['return_id'],
+                order_id,
+                return_result['refund_amount']
+            )
+        except Exception as e:
+            print(f"WhatsApp notification failed: {e}")
+    else:
+        answer = (
+            f"There was an issue processing your return:\n\n"
+            f"{return_result['reason']}\n\n"
+            "Please contact support for assistance."
+        )
+    
+    return {**state, "answer": answer}
+
+# --------------------------------------------------
+# REFUND STATUS NODE (DEMO)
+# --------------------------------------------------
+def refund_status_node(state: AgentState) -> AgentState:
+    """Handle refund status inquiries using mock backend"""
+    
+    backend = get_mock_backend()
+    order_id = extract_order_id(state['query'])
+    
+    if not order_id:
+        return {
+            **state,
+            "answer": (
+                "I can check your refund status! 💰\n\n"
+                "Please provide your order number (e.g., ORD-12345) "
+                "so I can look up your refund information."
+            )
+        }
+    
+    refund_info = backend.get_refund_status(order_id)
+    
+    if not refund_info:
+        # Check if order exists
+        order = backend.get_order(order_id)
+        if order:
+            return {
+                **state,
+                "answer": (
+                    f"I don't see any refund in progress for order {order_id}.\n\n"
+                    "If you'd like to return this order, just let me know and I can help you start the return process!"
+                )
+            }
+        else:
+            return {
+                **state,
+                "answer": (
+                    f"I couldn't find order {order_id} in our system.\n\n"
+                    "Please check your order number or contact us at:\n"
+                    "📧 Email: support@jashanmal.com"
+                )
+            }
+    
+    status = refund_info['status']
+    
+    if status == "completed":
+        answer = (
+            f"✅ Great news! Your refund has been **completed**!\n\n"
+            f"💰 Amount: ${refund_info['amount']:.2f}\n"
+            f"📅 Processed: {refund_info['created_at']}\n\n"
+            "The refund should appear in your account within 1-2 business days."
+        )
+        
+        # Send WhatsApp notification for completed refund
+        try:
+            from notifications.whatsapp_service import get_whatsapp_service
+            import os
+            
+            whatsapp = get_whatsapp_service()
+            customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
+            
+            whatsapp.send_refund_completed(
+                customer_number,
+                refund_info['amount'],
+                order_id
+            )
+        except Exception as e:
+            print(f"WhatsApp notification failed: {e}")
+            
+    elif status == "processing":
+        answer = (
+            f"⏳ Your refund is being **processed**.\n\n"
+            f"💰 Amount: ${refund_info['amount']:.2f}\n"
+            f"📅 Estimated completion: {refund_info['estimated_completion']}\n\n"
+            "We'll notify you once the refund is complete!"
+        )
+        
+        # Send WhatsApp notification for processing refund
+        try:
+            from notifications.whatsapp_service import get_whatsapp_service
+            import os
+            
+            whatsapp = get_whatsapp_service()
+            customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
+            
+            # Get return ID from refund info
+            return_id = refund_info.get('return_id', 'RET-00001')
+            whatsapp.send_refund_processing(
+                customer_number,
+                return_id,
+                refund_info['amount']
+            )
+        except Exception as e:
+            print(f"WhatsApp notification failed: {e}")
+    else:
+        answer = (
+            f"Your refund status: **{status}**\n\n"
+            f"💰 Amount: ${refund_info['amount']:.2f}\n\n"
+            "If you have questions, contact us at support@jashanmal.com"
+        )
+    
+    return {**state, "answer": answer}
+
+# --------------------------------------------------
 # LANGGRAPH
 # --------------------------------------------------
 graph = StateGraph(AgentState)
@@ -275,6 +567,9 @@ graph.add_node("retrieve", retrieve_node)
 graph.add_node("answer", answer_node)
 graph.add_node("contact", contact_node)
 graph.add_node("booking", booking_node)
+graph.add_node("order_tracking", order_tracking_node)
+graph.add_node("return_request", return_request_node)
+graph.add_node("refund_status", refund_status_node)
 graph.add_node("greeting", greeting_node)
 graph.add_node("fallback", fallback_node)
 
@@ -287,6 +582,9 @@ graph.add_conditional_edges(
         "rag": "retrieve",
         "contact": "contact",
         "booking": "booking",
+        "order_tracking": "order_tracking",
+        "return_request": "return_request",
+        "refund_status": "refund_status",
         "greeting": "greeting",
         "fallback": "fallback",
     },
@@ -296,6 +594,9 @@ graph.add_edge("retrieve", "answer")
 graph.add_edge("answer", END)
 graph.add_edge("contact", END)
 graph.add_edge("booking", END)
+graph.add_edge("order_tracking", END)
+graph.add_edge("return_request", END)
+graph.add_edge("refund_status", END)
 graph.add_edge("greeting", END)
 graph.add_edge("fallback", END)
 

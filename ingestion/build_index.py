@@ -1,22 +1,36 @@
 import json
 from pathlib import Path
+import numpy as np
+import faiss
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 from langchain_core.documents import Document
 from langchain_community.vectorstores import FAISS
-from gemini_embeddings import GeminiEmbeddings
+from langchain_community.docstore.in_memory import InMemoryDocstore
 
 load_dotenv()
 
-# -----------------------------
-# PATHS
-# -----------------------------
+
 INPUT_FILE = Path("data/processed/faqs.json")
 INDEX_DIR = Path("data/processed/faiss_index")
 
-# -----------------------------
-# LOAD DATA
-# -----------------------------
+
+genai.configure()
+EMBED_MODEL = "models/embedding-001"
+
+def embed_texts(texts: list[str]) -> np.ndarray:
+    vectors = []
+    for text in texts:
+        res = genai.embed_content(
+            model=EMBED_MODEL,
+            content=text,
+            task_type="retrieval_document",
+        )
+        vectors.append(res["embedding"])
+    return np.array(vectors, dtype="float32")
+
+
 with open(INPUT_FILE, encoding="utf-8") as f:
     raw_docs = json.load(f)
 
@@ -42,18 +56,30 @@ for item in raw_docs:
 
 print(f"Loaded {len(documents)} documents")
 
-# -----------------------------
-# BUILD FAISS INDEX WITH GEMINI EMBEDDINGS
-# -----------------------------
-print("Building FAISS index with Gemini embeddings...")
 
-embeddings = GeminiEmbeddings(model="models/embedding-001")
+print("Generating embeddings using Gemini...")
+vectors = embed_texts(texts)
 
-vectorstore = FAISS.from_documents(
-    documents=documents,
-    embedding=embeddings
+
+print("Building FAISS index...")
+
+dim = vectors.shape[1]
+index = faiss.IndexFlatL2(dim)
+index.add(vectors)
+
+docstore = InMemoryDocstore(
+    {str(i): documents[i] for i in range(len(documents))}
+)
+
+index_to_docstore_id = {i: str(i) for i in range(len(documents))}
+
+vectorstore = FAISS(
+    embedding_function=None,  # embeddings already computed
+    index=index,
+    docstore=docstore,
+    index_to_docstore_id=index_to_docstore_id,
 )
 
 vectorstore.save_local(INDEX_DIR)
 
-print(f"✓ FAISS index saved at: {INDEX_DIR.resolve()}")
+print(f"FAISS index saved at: {INDEX_DIR.resolve()}")
