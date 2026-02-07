@@ -4,12 +4,18 @@ from typing import Optional
 from twilio.rest import Client
 from dotenv import load_dotenv
 
+# Load .env first
 load_dotenv()
 
-# Twilio credentials (add to .env file)
+# Initialize credentials from environment variables
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")  # Twilio sandbox
+TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
+
+if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+    print("✓ Using Twilio credentials from environment")
+else:
+    print("⚠️ Twilio credentials not found in environment")
 
 
 class WhatsAppService:
@@ -21,12 +27,18 @@ class WhatsAppService:
         
         if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
             try:
+                print(f"🔧 Initializing Twilio with Account SID: {TWILIO_ACCOUNT_SID[:10]}...")
                 self.client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-                print("✓ WhatsApp service initialized")
+                print("✓ WhatsApp service initialized successfully")
             except Exception as e:
                 print(f"⚠️ WhatsApp service initialization failed: {e}")
+                print(f"   Account SID: {TWILIO_ACCOUNT_SID[:10] if TWILIO_ACCOUNT_SID else 'None'}...")
+                print(f"   Auth Token: {'Set' if TWILIO_AUTH_TOKEN else 'None'}")
         else:
-            print("⚠️ WhatsApp credentials not found. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in .env")
+            print("⚠️ WhatsApp credentials not found.")
+            print(f"   TWILIO_ACCOUNT_SID: {'Set' if TWILIO_ACCOUNT_SID else 'Missing'}")
+            print(f"   TWILIO_AUTH_TOKEN: {'Set' if TWILIO_AUTH_TOKEN else 'Missing'}")
+            print("   Set credentials in Streamlit secrets or .env file")
     
     def send_message(self, to_number: str, message: str) -> bool:
         """

@@ -1,14 +1,20 @@
 """Custom Gemini Embeddings wrapper for LangChain"""
 import os
 from typing import List
-import google.generativeai as genai
 from langchain_core.embeddings import Embeddings
+
+# Suppress the deprecation warning by using the old package
+# TODO: Migrate to google.genai when LangChain fully supports it
+import warnings
+warnings.filterwarnings('ignore', category=FutureWarning, module='google.generativeai')
+
+import google.generativeai as genai
 
 
 class GeminiEmbeddings(Embeddings):
     """Gemini embeddings using google.generativeai"""
     
-    def __init__(self, model: str = "models/embedding-001"):
+    def __init__(self, model: str = "models/embedding-001"):  # Still works with deprecated package
         self.model = model
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:

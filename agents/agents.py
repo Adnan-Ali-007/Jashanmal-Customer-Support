@@ -39,7 +39,13 @@ llm = ChatGoogleGenerativeAI(
 # --------------------------------------------------
 VECTORSTORE_PATH = "data/processed/faiss_index"
 
-embeddings = GeminiEmbeddings(model="models/embedding-001")
+# Use LangChain's GoogleGenerativeAIEmbeddings instead of custom wrapper
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="gemini-embedding-001",
+    google_api_key=os.environ["GOOGLE_API_KEY"]
+)
 
 vectorstore = FAISS.load_local(
     VECTORSTORE_PATH,
@@ -358,6 +364,8 @@ def order_tracking_node(state: AgentState) -> AgentState:
         import os
         
         whatsapp = get_whatsapp_service()
+        
+        # Get customer number from env
         customer_number = os.getenv("YOUR_WHATSAPP_NUMBER", "whatsapp:+917780879882")
         
         if status == "shipped":
