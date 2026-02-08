@@ -3,6 +3,7 @@ import os
 from typing import Optional
 from twilio.rest import Client
 from dotenv import load_dotenv
+import streamlit as st
 
 # Load .env first
 load_dotenv()
@@ -12,15 +13,13 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
 
-print(f"[DEBUG] WhatsApp Service Initialization:")
-print(f"  TWILIO_ACCOUNT_SID: {'✓ Set' if TWILIO_ACCOUNT_SID else '✗ Missing'}")
-print(f"  TWILIO_AUTH_TOKEN: {'✓ Set' if TWILIO_AUTH_TOKEN else '✗ Missing'}")
-print(f"  TWILIO_WHATSAPP_NUMBER: {TWILIO_WHATSAPP_NUMBER}")
-
+# Use st.write for debugging (will show in app)
 if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
-    print("✓ Using Twilio credentials from environment")
+    print("✓ Twilio credentials loaded from environment")
 else:
-    print("⚠️ Twilio credentials not found in environment")
+    print("⚠️ WARNING: Twilio credentials NOT found in environment!")
+    print(f"  TWILIO_ACCOUNT_SID: {TWILIO_ACCOUNT_SID[:10] if TWILIO_ACCOUNT_SID else 'MISSING'}...")
+    print(f"  TWILIO_AUTH_TOKEN: {'SET' if TWILIO_AUTH_TOKEN else 'MISSING'}")
 
 
 class WhatsAppService:

@@ -131,7 +131,7 @@ with st.sidebar:
         st.session_state.awaiting_booking_confirmation = False
         st.session_state.awaiting_user_email = False
         st.session_state.selected_booking_slot = None
-        db.create_conversation(st.session_state.thread_id, "New Conversation")
+        st.session_state.conversation_created = False  # Reset flag
         st.rerun()
     
     st.divider()
@@ -161,6 +161,7 @@ with st.sidebar:
                 ):
                     # Load this conversation
                     st.session_state.thread_id = conv['thread_id']
+                    st.session_state.conversation_created = True  # Existing conversation
                     
                     # Load messages from database
                     messages_data = db.get_messages(conv['thread_id'])
@@ -195,7 +196,10 @@ if "messages" not in st.session_state:
 
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = f"thread-{uuid.uuid4()}"
-    db.create_conversation(st.session_state.thread_id, "New Conversation")
+    # Don't create conversation yet - wait for first message
+
+if "conversation_created" not in st.session_state:
+    st.session_state.conversation_created = False
 
 if "booking_slots" not in st.session_state:
     st.session_state.booking_slots = []
@@ -222,6 +226,11 @@ for msg in st.session_state.messages:
 user_input = st.chat_input("How can I help you today?")
 
 if user_input:
+    # Create conversation in database on first message
+    if not st.session_state.conversation_created:
+        db.create_conversation(st.session_state.thread_id, "New Conversation")
+        st.session_state.conversation_created = True
+    
     # Save user message to database
     db.save_message(st.session_state.thread_id, "user", user_input)
     
